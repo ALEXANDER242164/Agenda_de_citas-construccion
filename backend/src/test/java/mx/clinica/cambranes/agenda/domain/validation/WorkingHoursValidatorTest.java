@@ -13,7 +13,7 @@ class WorkingHoursValidatorTest {
     private final WorkingHoursValidator validator = new WorkingHoursValidator("09:00", "17:30");
 
     @Test
-    void aceptaCitaEnHorarioLaboralLunesAViernes() {
+    void citaEnHorarioLaboral_esAceptada() {
         // Miercoles 13 de mayo 2026 a las 10:00, dura 60 min
         ValidationContext ctx = ctx(LocalDateTime.of(2026, 5, 13, 10, 0),
                                     LocalDateTime.of(2026, 5, 13, 11, 0));
@@ -21,7 +21,7 @@ class WorkingHoursValidatorTest {
     }
 
     @Test
-    void rechazaCitaEnSabado() {
+    void citaEnSabado_esRechazada() {
         ValidationContext ctx = ctx(LocalDateTime.of(2026, 5, 16, 10, 0),
                                     LocalDateTime.of(2026, 5, 16, 11, 0));
         List<ValidationError> errors = validator.validate(ctx);
@@ -31,14 +31,14 @@ class WorkingHoursValidatorTest {
     }
 
     @Test
-    void rechazaCitaEnDomingo() {
+    void citaEnDomingo_esRechazada() {
         ValidationContext ctx = ctx(LocalDateTime.of(2026, 5, 17, 10, 0),
                                     LocalDateTime.of(2026, 5, 17, 11, 0));
         assertThat(validator.validate(ctx)).isNotEmpty();
     }
 
     @Test
-    void rechazaInicioAntesDeLas9() {
+    void inicioAntesDeLas9_esRechazado() {
         ValidationContext ctx = ctx(LocalDateTime.of(2026, 5, 13, 8, 30),
                                     LocalDateTime.of(2026, 5, 13, 9, 30));
         assertThat(validator.validate(ctx)).extracting(ValidationError::message)
@@ -46,7 +46,7 @@ class WorkingHoursValidatorTest {
     }
 
     @Test
-    void rechazaFinDespuesDeLas17_30() {
+    void finDespuesDeLas17_30_esRechazado() {
         ValidationContext ctx = ctx(LocalDateTime.of(2026, 5, 13, 17, 0),
                                     LocalDateTime.of(2026, 5, 13, 18, 0));
         assertThat(validator.validate(ctx)).extracting(ValidationError::message)
@@ -54,7 +54,7 @@ class WorkingHoursValidatorTest {
     }
 
     @Test
-    void rechazaInicioPosteriorAFin() {
+    void inicioPosteriorAFin_esRechazado() {
         ValidationContext ctx = ctx(LocalDateTime.of(2026, 5, 13, 11, 0),
                                     LocalDateTime.of(2026, 5, 13, 10, 0));
         assertThat(validator.validate(ctx)).extracting(ValidationError::message)

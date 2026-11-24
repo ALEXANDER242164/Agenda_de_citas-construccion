@@ -26,7 +26,7 @@ class OverlapValidatorTest {
     }
 
     @Test
-    void sinSolapeNoReportaErrores() {
+    void sinSolape_noReportaErrores() {
         when(repo.findOverlapping(ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.any()))
                 .thenReturn(List.of());
 
@@ -35,7 +35,7 @@ class OverlapValidatorTest {
     }
 
     @Test
-    void solapeDeTerapeutaReportaError() {
+    void solapeDeTerapeuta_reportaError() {
         // Cita existente con el mismo terapeuta (1) pero otro paciente y otra sala.
         Appointment existing = appt(99L, 1L, 1L, 9L,
                 LocalDateTime.of(2026, 5, 13, 10, 0),
@@ -49,7 +49,7 @@ class OverlapValidatorTest {
     }
 
     @Test
-    void solapeDeSalaReportaError() {
+    void solapeDeSala_reportaError() {
         Appointment existing = appt(99L, 5L, 9L, 1L,
                 LocalDateTime.of(2026, 5, 13, 10, 0),
                 LocalDateTime.of(2026, 5, 13, 11, 0));
@@ -62,7 +62,7 @@ class OverlapValidatorTest {
     }
 
     @Test
-    void solapeDePacienteReportaError() {
+    void solapeDePaciente_reportaError() {
         Appointment existing = appt(99L, 7L, 9L, 9L,
                 LocalDateTime.of(2026, 5, 13, 10, 0),
                 LocalDateTime.of(2026, 5, 13, 11, 0));

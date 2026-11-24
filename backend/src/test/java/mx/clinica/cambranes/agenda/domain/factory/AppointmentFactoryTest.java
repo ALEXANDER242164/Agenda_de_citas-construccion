@@ -28,7 +28,7 @@ class AppointmentFactoryTest {
     }
 
     @Test
-    void newScheduledCalculaEndAtSegunDuracion() {
+    void newScheduled_duracion60_calculaEndAtYEstadoProgramado() {
         CreateAppointmentRequest req = new CreateAppointmentRequest(
                 1L, 2L, 3L, (short) 1,
                 LocalDateTime.of(2026, 5, 13, 10, 0),
@@ -45,7 +45,7 @@ class AppointmentFactoryTest {
     }
 
     @Test
-    void newScheduledNormalizaCommentsANullComoCadenaVacia() {
+    void newScheduled_comentariosNulos_seGuardanComoCadenaVacia() {
         CreateAppointmentRequest req = new CreateAppointmentRequest(
                 1L, 2L, 3L, (short) 1,
                 LocalDateTime.of(2026, 5, 13, 10, 0),
@@ -58,7 +58,7 @@ class AppointmentFactoryTest {
     }
 
     @Test
-    void fromRescheduleHeredaRecursosDelOriginal() {
+    void fromReschedule_heredaRecursosDeLaCitaOriginal() {
         Appointment original = Appointment.builder()
                 .patient(patient(7L)).therapist(therapist(2L)).room(room(3L))
                 .sessionType(sessionType((short) 2))
