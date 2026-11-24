@@ -38,7 +38,7 @@ class PatientLimitValidatorTest {
         ValidationContext ctx = ctx(7L);
         assertThat(validator.validate(ctx)).hasSize(1);
         assertThat(validator.validate(ctx))
-                .extracting(ValidationError::getType).contains("patient");
+                .extracting(ValidationError::type).contains("patient");
     }
 
     @Test
