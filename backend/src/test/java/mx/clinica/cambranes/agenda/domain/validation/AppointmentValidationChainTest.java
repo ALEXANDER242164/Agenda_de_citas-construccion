@@ -10,7 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class AppointmentValidationChainTest {
 
     @Test
-    void acumulaErroresDeTodosLosValidadores() {
+    void variosValidadoresConErrores_acumulaTodosLosErrores() {
         AppointmentValidator v1 = ctx -> List.of(ValidationError.of("a", "error A"));
         AppointmentValidator v2 = ctx -> List.of(ValidationError.of("b", "error B"));
         AppointmentValidator v3 = ctx -> List.of();
@@ -19,11 +19,11 @@ class AppointmentValidationChainTest {
         List<ValidationError> errors = chain.run(emptyCtx());
 
         assertThat(errors).hasSize(2);
-        assertThat(errors).extracting(ValidationError::getType).containsExactly("a", "b");
+        assertThat(errors).extracting(ValidationError::type).containsExactly("a", "b");
     }
 
     @Test
-    void sinValidadoresNoHayErrores() {
+    void sinValidadores_noHayErrores() {
         AppointmentValidationChain chain = new AppointmentValidationChain(List.of());
         assertThat(chain.run(emptyCtx())).isEmpty();
     }

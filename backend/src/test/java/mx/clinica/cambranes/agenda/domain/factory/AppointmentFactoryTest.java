@@ -28,7 +28,7 @@ class AppointmentFactoryTest {
     }
 
     @Test
-    void newScheduledCalculaEndAtSegunDuracion() {
+    void newScheduled_duracion60_calculaEndAtYEstadoProgramado() {
         CreateAppointmentRequest req = new CreateAppointmentRequest(
                 1L, 2L, 3L, (short) 1,
                 LocalDateTime.of(2026, 5, 13, 10, 0),
@@ -45,7 +45,7 @@ class AppointmentFactoryTest {
     }
 
     @Test
-    void newScheduledNormalizaCommentsANullComoCadenaVacia() {
+    void newScheduled_comentariosNulos_seGuardanComoCadenaVacia() {
         CreateAppointmentRequest req = new CreateAppointmentRequest(
                 1L, 2L, 3L, (short) 1,
                 LocalDateTime.of(2026, 5, 13, 10, 0),
@@ -58,7 +58,7 @@ class AppointmentFactoryTest {
     }
 
     @Test
-    void fromRescheduleHeredaRecursosDelOriginal() {
+    void fromReschedule_heredaRecursosDeLaCitaOriginal() {
         Appointment original = Appointment.builder()
                 .patient(patient(7L)).therapist(therapist(2L)).room(room(3L))
                 .sessionType(sessionType((short) 2))
@@ -82,6 +82,28 @@ class AppointmentFactoryTest {
         assertThat(nueva.getEndAt()).isEqualTo(LocalDateTime.of(2026, 5, 14, 13, 30));
         assertThat(nueva.getRescheduledFrom()).isSameAs(original);
         assertThat(nueva.getComments()).isEqualTo("comentario");
+    }
+
+    // --- Casos limite: duracion minima (15) y maxima (240) permitidas ---
+
+    @Test
+    void newScheduled_duracionMinima15_calculaEndAt() {
+        Appointment a = factory.newScheduled(request(LocalDateTime.of(2026, 5, 13, 9, 0), 15),
+                patient(1L), therapist(2L), room(3L), sessionType((short) 1), user(99L));
+
+        assertThat(a.getEndAt()).isEqualTo(LocalDateTime.of(2026, 5, 13, 9, 15));
+    }
+
+    @Test
+    void newScheduled_duracionMaxima240_calculaEndAt() {
+        Appointment a = factory.newScheduled(request(LocalDateTime.of(2026, 5, 13, 9, 0), 240),
+                patient(1L), therapist(2L), room(3L), sessionType((short) 1), user(99L));
+
+        assertThat(a.getEndAt()).isEqualTo(LocalDateTime.of(2026, 5, 13, 13, 0));
+    }
+
+    private CreateAppointmentRequest request(LocalDateTime startAt, int duracion) {
+        return new CreateAppointmentRequest(1L, 2L, 3L, (short) 1, startAt, duracion, null, null, null);
     }
 
     private Patient patient(Long id)    { Patient p = new Patient(); p.setId(id); return p; }
