@@ -26,14 +26,14 @@ class PatientLimitValidatorTest {
     }
 
     @Test
-    void permiteDosCitasActivasParaPaciente() {
+    void pacienteConDosCitas_debajoDelMaximo_esAceptado() {
         when(repo.countScheduledByPatient(any(), any())).thenReturn(2L);
         ValidationContext ctx = ctx(7L);
         assertThat(validator.validate(ctx)).isEmpty();
     }
 
     @Test
-    void rechazaCuartaCitaParaPaciente() {
+    void pacienteConTresCitas_enElMaximo_esRechazado() {
         when(repo.countScheduledByPatient(any(), any())).thenReturn(3L);
         ValidationContext ctx = ctx(7L);
         assertThat(validator.validate(ctx)).hasSize(1);
@@ -42,7 +42,7 @@ class PatientLimitValidatorTest {
     }
 
     @Test
-    void noValidaSiNoHayPaciente() {
+    void sinPaciente_noReportaErrores() {
         ValidationContext ctx = ValidationContext.builder()
                 .therapistId(1L).roomId(1L)
                 .startAt(LocalDateTime.of(2026, 5, 13, 10, 0))
