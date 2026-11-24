@@ -25,8 +25,8 @@ class WorkingHoursValidatorTest {
         ValidationContext ctx = ctx(LocalDateTime.of(2026, 5, 16, 10, 0),
                                     LocalDateTime.of(2026, 5, 16, 11, 0));
         List<ValidationError> errors = validator.validate(ctx);
-        assertThat(errors).extracting(ValidationError::getType).contains("working_hours");
-        assertThat(errors).extracting(ValidationError::getMessage)
+        assertThat(errors).extracting(ValidationError::type).contains("working_hours");
+        assertThat(errors).extracting(ValidationError::message)
                 .anyMatch(m -> m.contains("lunes a viernes"));
     }
 
@@ -41,7 +41,7 @@ class WorkingHoursValidatorTest {
     void rechazaInicioAntesDeLas9() {
         ValidationContext ctx = ctx(LocalDateTime.of(2026, 5, 13, 8, 30),
                                     LocalDateTime.of(2026, 5, 13, 9, 30));
-        assertThat(validator.validate(ctx)).extracting(ValidationError::getMessage)
+        assertThat(validator.validate(ctx)).extracting(ValidationError::message)
                 .anyMatch(m -> m.contains("antes de las"));
     }
 
@@ -49,7 +49,7 @@ class WorkingHoursValidatorTest {
     void rechazaFinDespuesDeLas17_30() {
         ValidationContext ctx = ctx(LocalDateTime.of(2026, 5, 13, 17, 0),
                                     LocalDateTime.of(2026, 5, 13, 18, 0));
-        assertThat(validator.validate(ctx)).extracting(ValidationError::getMessage)
+        assertThat(validator.validate(ctx)).extracting(ValidationError::message)
                 .anyMatch(m -> m.contains("despues de las"));
     }
 
@@ -57,7 +57,7 @@ class WorkingHoursValidatorTest {
     void rechazaInicioPosteriorAFin() {
         ValidationContext ctx = ctx(LocalDateTime.of(2026, 5, 13, 11, 0),
                                     LocalDateTime.of(2026, 5, 13, 10, 0));
-        assertThat(validator.validate(ctx)).extracting(ValidationError::getMessage)
+        assertThat(validator.validate(ctx)).extracting(ValidationError::message)
                 .anyMatch(m -> m.contains("hora de inicio"));
     }
 

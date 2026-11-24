@@ -19,7 +19,7 @@ class AppointmentValidationChainTest {
         List<ValidationError> errors = chain.run(emptyCtx());
 
         assertThat(errors).hasSize(2);
-        assertThat(errors).extracting(ValidationError::getType).containsExactly("a", "b");
+        assertThat(errors).extracting(ValidationError::type).containsExactly("a", "b");
     }
 
     @Test

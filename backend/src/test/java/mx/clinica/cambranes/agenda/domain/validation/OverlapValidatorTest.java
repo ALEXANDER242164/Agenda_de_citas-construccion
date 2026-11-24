@@ -44,7 +44,7 @@ class OverlapValidatorTest {
 
         ValidationContext ctx = ctx(7L, 1L, 5L);
         List<ValidationError> errors = validator.validate(ctx);
-        assertThat(errors).extracting(ValidationError::getType).contains("therapist");
+        assertThat(errors).extracting(ValidationError::type).contains("therapist");
     }
 
     @Test
@@ -57,7 +57,7 @@ class OverlapValidatorTest {
 
         ValidationContext ctx = ctx(2L, 3L, 1L);
         List<ValidationError> errors = validator.validate(ctx);
-        assertThat(errors).extracting(ValidationError::getType).contains("room");
+        assertThat(errors).extracting(ValidationError::type).contains("room");
     }
 
     @Test
@@ -70,7 +70,7 @@ class OverlapValidatorTest {
 
         ValidationContext ctx = ctx(7L, 3L, 5L);
         List<ValidationError> errors = validator.validate(ctx);
-        assertThat(errors).extracting(ValidationError::getType).contains("patient");
+        assertThat(errors).extracting(ValidationError::type).contains("patient");
     }
 
     private ValidationContext ctx(Long patientId, Long therapistId, Long roomId) {
