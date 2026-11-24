@@ -61,6 +61,22 @@ class WorkingHoursValidatorTest {
                 .anyMatch(m -> m.contains("hora de inicio"));
     }
 
+    // --- Casos limite: bordes exactos del horario laboral (09:00 - 17:30) ---
+
+    @Test
+    void inicioExactoALas9_esAceptado() {
+        ValidationContext ctx = ctx(LocalDateTime.of(2026, 5, 13, 9, 0),
+                                    LocalDateTime.of(2026, 5, 13, 10, 0));
+        assertThat(validator.validate(ctx)).isEmpty();
+    }
+
+    @Test
+    void finExactoALas17_30_esAceptado() {
+        ValidationContext ctx = ctx(LocalDateTime.of(2026, 5, 13, 16, 30),
+                                    LocalDateTime.of(2026, 5, 13, 17, 30));
+        assertThat(validator.validate(ctx)).isEmpty();
+    }
+
     private ValidationContext ctx(LocalDateTime start, LocalDateTime end) {
         return ValidationContext.builder()
                 .patientId(1L).therapistId(1L).roomId(1L)
