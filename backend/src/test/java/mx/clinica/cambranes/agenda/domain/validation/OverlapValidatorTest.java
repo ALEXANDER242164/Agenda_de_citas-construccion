@@ -26,7 +26,7 @@ class OverlapValidatorTest {
     }
 
     @Test
-    void sinSolapeNoReportaErrores() {
+    void sinSolape_noReportaErrores() {
         when(repo.findOverlapping(ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.any()))
                 .thenReturn(List.of());
 
@@ -35,8 +35,9 @@ class OverlapValidatorTest {
     }
 
     @Test
-    void solapeDeTerapeutaReportaError() {
-        Appointment existing = appt(99L, 1L, 2L, 9L,
+    void solapeDeTerapeuta_reportaError() {
+        // Cita existente con el mismo terapeuta (1) pero otro paciente y otra sala.
+        Appointment existing = appt(99L, 1L, 1L, 9L,
                 LocalDateTime.of(2026, 5, 13, 10, 0),
                 LocalDateTime.of(2026, 5, 13, 11, 0));
         when(repo.findOverlapping(ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.any()))
@@ -44,11 +45,11 @@ class OverlapValidatorTest {
 
         ValidationContext ctx = ctx(7L, 1L, 5L);
         List<ValidationError> errors = validator.validate(ctx);
-        assertThat(errors).extracting(ValidationError::getType).contains("therapist");
+        assertThat(errors).extracting(ValidationError::type).contains("therapist");
     }
 
     @Test
-    void solapeDeSalaReportaError() {
+    void solapeDeSala_reportaError() {
         Appointment existing = appt(99L, 5L, 9L, 1L,
                 LocalDateTime.of(2026, 5, 13, 10, 0),
                 LocalDateTime.of(2026, 5, 13, 11, 0));
@@ -57,11 +58,11 @@ class OverlapValidatorTest {
 
         ValidationContext ctx = ctx(2L, 3L, 1L);
         List<ValidationError> errors = validator.validate(ctx);
-        assertThat(errors).extracting(ValidationError::getType).contains("room");
+        assertThat(errors).extracting(ValidationError::type).contains("room");
     }
 
     @Test
-    void solapeDePacienteReportaError() {
+    void solapeDePaciente_reportaError() {
         Appointment existing = appt(99L, 7L, 9L, 9L,
                 LocalDateTime.of(2026, 5, 13, 10, 0),
                 LocalDateTime.of(2026, 5, 13, 11, 0));
@@ -70,7 +71,20 @@ class OverlapValidatorTest {
 
         ValidationContext ctx = ctx(7L, 3L, 5L);
         List<ValidationError> errors = validator.validate(ctx);
-        assertThat(errors).extracting(ValidationError::getType).contains("patient");
+        assertThat(errors).extracting(ValidationError::type).contains("patient");
+    }
+
+    @Test
+    void mismoTerapeutaYMismaSala_reportaAmbosErrores() {
+        Appointment existing = appt(99L, 9L, 1L, 1L,
+                LocalDateTime.of(2026, 5, 13, 10, 0),
+                LocalDateTime.of(2026, 5, 13, 11, 0));
+        when(repo.findOverlapping(ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.any()))
+                .thenReturn(List.of(existing));
+
+        List<ValidationError> errors = validator.validate(ctx(7L, 1L, 1L));
+        assertThat(errors).extracting(ValidationError::type)
+                .containsExactlyInAnyOrder("therapist", "room");
     }
 
     private ValidationContext ctx(Long patientId, Long therapistId, Long roomId) {

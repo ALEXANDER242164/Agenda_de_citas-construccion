@@ -13,7 +13,7 @@ class WorkingHoursValidatorTest {
     private final WorkingHoursValidator validator = new WorkingHoursValidator("09:00", "17:30");
 
     @Test
-    void aceptaCitaEnHorarioLaboralLunesAViernes() {
+    void citaEnHorarioLaboral_esAceptada() {
         // Miercoles 13 de mayo 2026 a las 10:00, dura 60 min
         ValidationContext ctx = ctx(LocalDateTime.of(2026, 5, 13, 10, 0),
                                     LocalDateTime.of(2026, 5, 13, 11, 0));
@@ -21,44 +21,60 @@ class WorkingHoursValidatorTest {
     }
 
     @Test
-    void rechazaCitaEnSabado() {
+    void citaEnSabado_esRechazada() {
         ValidationContext ctx = ctx(LocalDateTime.of(2026, 5, 16, 10, 0),
                                     LocalDateTime.of(2026, 5, 16, 11, 0));
         List<ValidationError> errors = validator.validate(ctx);
-        assertThat(errors).extracting(ValidationError::getType).contains("working_hours");
-        assertThat(errors).extracting(ValidationError::getMessage)
+        assertThat(errors).extracting(ValidationError::type).contains("working_hours");
+        assertThat(errors).extracting(ValidationError::message)
                 .anyMatch(m -> m.contains("lunes a viernes"));
     }
 
     @Test
-    void rechazaCitaEnDomingo() {
+    void citaEnDomingo_esRechazada() {
         ValidationContext ctx = ctx(LocalDateTime.of(2026, 5, 17, 10, 0),
                                     LocalDateTime.of(2026, 5, 17, 11, 0));
         assertThat(validator.validate(ctx)).isNotEmpty();
     }
 
     @Test
-    void rechazaInicioAntesDeLas9() {
+    void inicioAntesDeLas9_esRechazado() {
         ValidationContext ctx = ctx(LocalDateTime.of(2026, 5, 13, 8, 30),
                                     LocalDateTime.of(2026, 5, 13, 9, 30));
-        assertThat(validator.validate(ctx)).extracting(ValidationError::getMessage)
+        assertThat(validator.validate(ctx)).extracting(ValidationError::message)
                 .anyMatch(m -> m.contains("antes de las"));
     }
 
     @Test
-    void rechazaFinDespuesDeLas17_30() {
+    void finDespuesDeLas17_30_esRechazado() {
         ValidationContext ctx = ctx(LocalDateTime.of(2026, 5, 13, 17, 0),
                                     LocalDateTime.of(2026, 5, 13, 18, 0));
-        assertThat(validator.validate(ctx)).extracting(ValidationError::getMessage)
+        assertThat(validator.validate(ctx)).extracting(ValidationError::message)
                 .anyMatch(m -> m.contains("despues de las"));
     }
 
     @Test
-    void rechazaInicioPosteriorAFin() {
+    void inicioPosteriorAFin_esRechazado() {
         ValidationContext ctx = ctx(LocalDateTime.of(2026, 5, 13, 11, 0),
                                     LocalDateTime.of(2026, 5, 13, 10, 0));
-        assertThat(validator.validate(ctx)).extracting(ValidationError::getMessage)
+        assertThat(validator.validate(ctx)).extracting(ValidationError::message)
                 .anyMatch(m -> m.contains("hora de inicio"));
+    }
+
+    // --- Casos limite: bordes exactos del horario laboral (09:00 - 17:30) ---
+
+    @Test
+    void inicioExactoALas9_esAceptado() {
+        ValidationContext ctx = ctx(LocalDateTime.of(2026, 5, 13, 9, 0),
+                                    LocalDateTime.of(2026, 5, 13, 10, 0));
+        assertThat(validator.validate(ctx)).isEmpty();
+    }
+
+    @Test
+    void finExactoALas17_30_esAceptado() {
+        ValidationContext ctx = ctx(LocalDateTime.of(2026, 5, 13, 16, 30),
+                                    LocalDateTime.of(2026, 5, 13, 17, 30));
+        assertThat(validator.validate(ctx)).isEmpty();
     }
 
     private ValidationContext ctx(LocalDateTime start, LocalDateTime end) {

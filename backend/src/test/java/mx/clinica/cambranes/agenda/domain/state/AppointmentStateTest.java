@@ -39,25 +39,25 @@ class AppointmentStateTest {
     }
 
     @Test
-    void desdeScheduledSePuedeCancelar() {
+    void citaProgramada_puedeCancelarse() {
         Appointment a = withStatus(AppointmentStatus.SCHEDULED);
         assertThat(scheduled.cancel(a)).isNotNull();
     }
 
     @Test
-    void desdeScheduledSePuedeReprogramar() {
+    void citaProgramada_puedeReprogramarse() {
         Appointment a = withStatus(AppointmentStatus.SCHEDULED);
         assertThat(scheduled.reschedule(a)).isNotNull();
     }
 
     @Test
-    void desdeScheduledSePuedeCompletar() {
+    void citaProgramada_puedeCompletarse() {
         Appointment a = withStatus(AppointmentStatus.SCHEDULED);
         assertThat(scheduled.complete(a)).isNotNull();
     }
 
     @Test
-    void cancelarUnaCitaCanceladaLanzaExcepcion() {
+    void cancelarUnaCitaCancelada_lanzaExcepcion() {
         Appointment a = withStatus(AppointmentStatus.CANCELLED);
         a.setId(42L);
         assertThatThrownBy(() -> cancelled.cancel(a))
@@ -67,7 +67,7 @@ class AppointmentStateTest {
     }
 
     @Test
-    void completarUnaCitaCompletadaLanzaExcepcion() {
+    void completarUnaCitaCompletada_lanzaExcepcion() {
         Appointment a = withStatus(AppointmentStatus.COMPLETED);
         a.setId(7L);
         assertThatThrownBy(() -> completed.complete(a))
@@ -76,7 +76,7 @@ class AppointmentStateTest {
     }
 
     @Test
-    void reprogramarUnaCitaReprogramadaLanzaExcepcion() {
+    void reprogramarUnaCitaReprogramada_lanzaExcepcion() {
         Appointment a = withStatus(AppointmentStatus.RESCHEDULED);
         a.setId(7L);
         assertThatThrownBy(() -> rescheduledState.reschedule(a))
@@ -85,7 +85,7 @@ class AppointmentStateTest {
     }
 
     @Test
-    void resolverDevuelveElEstadoCorrectoSegunStatus() {
+    void resolver_devuelveElEstadoSegunStatus() {
         Appointment a = withStatus(AppointmentStatus.SCHEDULED);
         assertThat(resolver.resolve(a)).isInstanceOf(ScheduledState.class);
 
@@ -97,7 +97,7 @@ class AppointmentStateTest {
     }
 
     @Test
-    void resolverConEstadoDesconocidoLanzaExcepcion() {
+    void resolverConEstadoDesconocido_lanzaExcepcion() {
         Appointment a = withStatus((short) 99);
         assertThatThrownBy(() -> resolver.resolve(a))
                 .isInstanceOf(IllegalStateTransitionException.class);
