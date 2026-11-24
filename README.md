@@ -160,6 +160,7 @@ Debe incluir como mínimo:
 - `COMO_CORRER.md`: instrucciones para levantar el proyecto localmente.
 - `CONTRIBUTING.md`: guía de contribución al repositorio.
 - `PATRONES_DE_DISEÑO.md`: patrones de diseño aplicados en el proyecto.
+- `08_unit_testing/pruebas_unitarias.md`: cómo ejecutar las pruebas unitarias (VS Code o `mvnw test`) y qué cubre cada una.
 
 ## Gobernanza del repositorio
 
