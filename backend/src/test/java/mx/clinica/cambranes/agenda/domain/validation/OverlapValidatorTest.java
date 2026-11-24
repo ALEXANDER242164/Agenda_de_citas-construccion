@@ -36,7 +36,8 @@ class OverlapValidatorTest {
 
     @Test
     void solapeDeTerapeutaReportaError() {
-        Appointment existing = appt(99L, 1L, 2L, 9L,
+        // Cita existente con el mismo terapeuta (1) pero otro paciente y otra sala.
+        Appointment existing = appt(99L, 1L, 1L, 9L,
                 LocalDateTime.of(2026, 5, 13, 10, 0),
                 LocalDateTime.of(2026, 5, 13, 11, 0));
         when(repo.findOverlapping(ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.any()))
