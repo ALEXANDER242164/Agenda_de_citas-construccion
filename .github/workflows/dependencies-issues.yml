@@ -1,0 +1,153 @@
+name: Verificar dependencias de issues
+
+on:
+  pull_request_target:
+    types: [opened, reopened, synchronize, edited, closed]
+  issues:
+    types: [closed, reopened, deleted, transferred]
+  workflow_dispatch:
+
+# Cada ejecución vuelve a leer todos los PR abiertos. Solo una publica a la vez.
+concurrency:
+  group: dependencies-issues
+  cancel-in-progress: false
+
+permissions:
+  issues: read
+  pull-requests: read
+  statuses: write
+
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Publicar el estado de las dependencias
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REQUIRED_ISSUE_DEPENDENCIES: ${{ vars.REQUIRED_ISSUE_DEPENDENCIES }}
+        run: |
+          node <<'NODE'
+          const branch = 'main';
+          const context = 'dependencies-issues';
+          const repo = `/repos/${process.env.GITHUB_REPOSITORY}`;
+          const runUrl = `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`;
+          const headers = {
+            Authorization: `Bearer ${process.env.GH_TOKEN}`,
+            Accept: 'application/vnd.github+json',
+            'Content-Type': 'application/json',
+          };
+
+          async function api(path, body) {
+            const response = await fetch(`${process.env.GITHUB_API_URL}${repo}${path}`, {
+              headers,
+              method: body ? 'POST' : 'GET',
+              body: body ? JSON.stringify(body) : undefined,
+              redirect: 'error',
+              signal: AbortSignal.timeout(15_000),
+            });
+            if (!response.ok) throw new Error(`GitHub API ${response.status}: ${path}`);
+            return response.json();
+          }
+
+          // Issue que cierra el PR («Closes #6») -> issues que deben estar cerrados antes de fusionar.
+          // ISS03 (#6) espera a ISS01 (#4) e ISS02 (#5); ISS05 (#8) espera a #5, #6 y #7.
+          // Son dependencias de código, no de la etiqueta v1.0, y no importa qué número reciba el PR.
+          // La variable del repositorio REQUIRED_ISSUE_DEPENDENCIES, si existe, reemplaza este valor.
+          const defaultDependencies = '{"6":[4,5],"8":[5,6,7]}';
+
+          function readRequiredDependencies() {
+            const config = JSON.parse(process.env.REQUIRED_ISSUE_DEPENDENCIES || defaultDependencies);
+            if (!config || typeof config !== 'object' || Array.isArray(config)) {
+              throw new Error('REQUIRED_ISSUE_DEPENDENCIES debe ser un objeto JSON.');
+            }
+            for (const [key, issues] of Object.entries(config)) {
+              if (!/^[1-9]\d*$/.test(key) || !Array.isArray(issues) ||
+                  !issues.every(issue => Number.isSafeInteger(issue) && issue > 0)) {
+                throw new Error(`Formato de REQUIRED_ISSUE_DEPENDENCIES: ${defaultDependencies}`);
+              }
+            }
+            return config;
+          }
+
+          const issueStates = new Map();
+
+          async function verify(pulls, requiredDependencies) {
+            for (const pr of pulls) {
+              const body = pr.body || '';
+              // Mismas palabras con las que GitHub cierra el issue al fusionar: close(s/d), fix(es/ed), resolve(s/d).
+              const closes = [...body.matchAll(/\b(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?):?\s+#([1-9]\d*)/gi)]
+                .map(found => Number(found[1]));
+              const dependencies = new Set(closes.flatMap(number => requiredDependencies[number] || []));
+              for (const line of body.split(/\r?\n/)) {
+                // La plantilla de PR usa listas («- Closes #»): acepta también «- Depends on #N».
+                const declaration = line.trim().replace(/^[-*+]\s+/, '');
+                if (!/^depends\s+on\b/i.test(declaration)) continue;
+                const match = /^depends\s+on\s+#([1-9]\d*)$/i.exec(declaration);
+                const number = Number(match?.[1]);
+                if (!Number.isSafeInteger(number)) {
+                  return ['failure', `PR #${pr.number}: usa una línea «Depends on #N» por issue.`];
+                }
+                dependencies.add(number);
+              }
+              // Un issue que este mismo PR cierra no puede estar cerrado antes del merge.
+              for (const number of closes) dependencies.delete(number);
+
+              for (const number of dependencies) {
+                if (!issueStates.has(number)) {
+                  issueStates.set(number, await api(`/issues/${number}`));
+                }
+                const issue = issueStates.get(number);
+                if (issue.pull_request || issue.number !== number) {
+                  return ['failure', `PR #${pr.number}: #${number} debe ser un issue del repositorio.`];
+                }
+                if (issue.state !== 'closed') {
+                  return ['failure', `PR #${pr.number}: el issue #${number} sigue abierto.`];
+                }
+              }
+            }
+            return ['success', 'Todas las dependencias declaradas están cerradas.'];
+          }
+
+          async function main() {
+            const pullsBySha = new Map();
+            for (let page = 1; ; page++) {
+              const pulls = await api(`/pulls?state=open&base=${encodeURIComponent(branch)}&per_page=100&page=${page}`);
+              for (const pr of pulls) {
+                const pullsAtSha = pullsBySha.get(pr.head.sha) || [];
+                pullsAtSha.push(pr);
+                pullsBySha.set(pr.head.sha, pullsAtSha);
+              }
+              if (pulls.length < 100) break;
+            }
+
+            for (const [sha, pulls] of pullsBySha) {
+              try {
+                let state, description;
+                try {
+                  [state, description] = await verify(pulls, readRequiredDependencies());
+                } catch (error) {
+                  console.error(error.message);
+                  [state, description] = ['error', 'No se pudo verificar un issue o la configuración.'];
+                  process.exitCode = 1;
+                }
+
+                const current = await api(`/commits/${sha}/status?per_page=100`);
+                const previous = current.statuses.find(status => status.context === context);
+                if (previous?.creator?.login !== 'github-actions[bot]' ||
+                    previous.state !== state || previous.description !== description) {
+                  await api(`/statuses/${sha}`, { state, context, description, target_url: runUrl });
+                }
+                console.log(`${sha}: ${state} — ${description}`);
+              } catch (error) {
+                console.error(error.message);
+                process.exitCode = 1;
+              }
+            }
+          }
+
+          main().catch(error => {
+            console.error(error.message);
+            process.exitCode = 1;
+          });
+          NODE

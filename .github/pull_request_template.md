@@ -6,6 +6,7 @@ Describa claramente que se entrega en este PR y por que era necesario.
 
 - Related to #
 - Closes #
+<!-- Si este PR necesita issues cerrados antes del merge, agrega una linea por issue (OBLIGATORIO): - Depends on #N -->
 
 ## Tipo de cambio
 
@@ -49,7 +50,7 @@ Adjunte aqui enlaces, capturas o descripcion breve de la evidencia que confirma 
 
 ## Checklist final antes de merge
 
-- [ ] El PR apunta a `develop`
+- [ ] El PR apunta a `main`
 - [ ] Existe una sola persona responsable de la revision
 - [ ] La issue relacionada tiene descripcion y criterios claros
 - [ ] No se mezclan cambios no relacionados
